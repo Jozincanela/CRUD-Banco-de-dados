@@ -6,7 +6,58 @@ class CRUD:
     def __init__(self, endereco_banco: str):
 
         self.endereço_banco = endereco_banco
+        
+    def selecionar_colunas(self, nome_tabela:str, nome_colunas :str):
+        """
+        seleciona todos os dados de uma coluna específica
+
+        Variaveis:
+            nome_tabela (str) :"nome_da_tabela"
+            nome_colunas (str): "'coluna', 'coluna'..."
+        Returns:
+            lista: [(dado,), (dado,), (dado,), (dado,), (dado,)]
+        """
+        
+        banco =  sq.connect(self.endereço_banco)
+        cursor = banco.cursor()
+        
+        
+        dados_coluna = cursor.execute(f"SELECT {nome_colunas} FROM {nome_tabela}").fetchall()
+
+        banco.commit()
+        banco.close()
+        return dados_coluna
+    
+    def nova_tabela(self,nome_tabela: str, nome_coluna_e_tipo:str , tipo_de_tabela:int):
+        """
+        Cria uma tabela no banco de dados que não existe  \n
+        
+        Variaveis:
+            nome_tabela (str): "nome_da_tabela"
+            nome_coluna_e_tipo (str): "coluna1 TIPO, coluna2 TIPO, coluna3 TIPO, ..."\n
+            
+        Tipos:
+            INTEGER, REAL, TEXT
+        """
+        
+        banco =  sq.connect(self.endereço_banco)
+        cursor = banco.cursor()
+        if tipo_de_tabela == 0:
+            cursor.execute(f"CREATE TABLE IF NOT EXISTS {nome_tabela}(CHAVE TEXT,{nome_coluna_e_tipo})")
+        elif  tipo_de_tabela == 1:
+            cursor.execute(f"CREATE TABLE IF NOT EXISTS {nome_tabela}({nome_coluna_e_tipo})")
+        banco.commit()
+        banco.close()
            
+           
+    def Tabelas(self):
+        """mostra os nomes das tabelas presentes no banco de dados
+        """
+        banco =  sq.connect(self.endereço_banco)
+        cursor = banco.cursor()
+        tabelas = cursor.execute("SELECT name FROM sqlite_master  WHERE type='table'").fetchall()
+        return tabelas
+        
     def selecionar_linhas(self, nome_tabela:str, id: int):
         """
         seleciona todas as linhas (id = 0) ou seleciona a linha desejada atravez do id
@@ -45,28 +96,14 @@ class CRUD:
         colunas = cursor.fetchall()
         nomes_das_colunas = [coluna[1] for coluna in colunas]
         return nomes_das_colunas
+    
 
-    def nova_tabela(self,nome_tabela: str, nome_coluna_e_tipo:str ):
-        """
-        Cria uma tabela no banco de dados que não existe  \n
-        Variaveis:
-            nome_tabela (str): "nome_da_tabela"
-            nome_coluna_e_tipo (str): "coluna1 TIPO, coluna2 TIPO, coluna3 TIPO, ..."\n
-            
-        Tipos:
-            INTEGER, REAL, TEXT
-        """
-        banco =  sq.connect(self.endereço_banco)
-        cursor = banco.cursor()
-        cursor.execute(f"CREATE TABLE IF NOT EXISTS {nome_tabela}(CHAVE TEXT,{nome_coluna_e_tipo})")
-        banco.commit()
-        banco.close()
 
-    def inserir_dados(self, nome_tabela: str, nome_coluna:str ,valores: str ):
+
+    def inserir_dados(self, nome_tabela: str, nome_coluna:str ,valores: str, tipo_da_tabela:int):
         """ 
         Adiciona valores para a tabela 
-
-
+        
         Variaveis:
             nome_tabela (str): "nome_da_tabela"
             nome_coluna (str): nome_coluna = "'coluna1, coluna2, coluna3 ...'"
@@ -79,8 +116,10 @@ class CRUD:
         for i in range(0, 9):
             chave+= str(randint(0,9))
 
-
-        cursor.execute(f"INSERT INTO {nome_tabela}(CHAVE ,{nome_coluna}) VALUES ({chave},{valores})")
+        if tipo_da_tabela == 0:
+            cursor.execute(f"INSERT INTO {nome_tabela}(CHAVE ,{nome_coluna}) VALUES ({chave},{valores})")
+        elif tipo_da_tabela == 1:
+                cursor.execute(f"INSERT INTO {nome_tabela}({nome_coluna}) VALUES ({valores})")
         banco.commit()
         banco.close()
         
@@ -90,6 +129,7 @@ class CRUD:
         Variaveis:
             nome_tabela (str): "nome_da_tabela"
         """
+        
         banco =  sq.connect(self.endereço_banco)
         cursor = banco.cursor()
         print(cursor.execute(f"SELECT * FROM {nome_tabela} ").fetchall())
@@ -113,6 +153,7 @@ class CRUD:
         print(cursor.execute(f"SELECT * FROM {nome_tabela} WHERE {coluna}='{valor}'").fetchall())
         banco.commit()
         banco.close()
+        
 
     def atualizar_dados(self, nome_tabela:str, id:int, Coluna_com_Novo_valor: str):
         """        
@@ -124,9 +165,6 @@ class CRUD:
             id (int): numero da linha
             Coluna_com_Novo_valor (str): "coluna1= 'novo valor'"
         """ 
-        
-        
-        
 
         banco =  sq.connect(self.endereço_banco)
         cursor = banco.cursor()
@@ -142,7 +180,7 @@ class CRUD:
         """
         Apaga dados de uma linha especifica
 
-        Args:
+        Variaveis:
             nome_tabela (str): "nome_da_tabela"
             id (int): numero da linha
         """
@@ -161,7 +199,7 @@ class CRUD:
     def reset (self, nome_da_tabela:str):
         """        
         Apagará todos os dados de uma tabela mas mantem as respectivas colunas ultilizando a seguinte formatação
-        Args:
+        Variaveis:
             nome_da_tabela (str): "nome_da_tabela"
         """
 
