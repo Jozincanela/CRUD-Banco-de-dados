@@ -145,14 +145,16 @@ class CRUD:
         """
         banco =  sq.connect(self.endereço_banco)
         cursor = banco.cursor()
+        nometabela = nome_tabela
+        coluna = CRUD.nome_colunas(self,nometabela)[0]
+        valor = CRUD.selecionar_linhas(self,nometabela, id)[0]
         
-        coluna = CRUD.nome_colunas(nome_tabela)[0]
-        valor = CRUD.selecionar_linhas(nome_tabela, id)[0]
-        
-        
-        print(cursor.execute(f"SELECT * FROM {nome_tabela} WHERE {coluna}='{valor}'").fetchall())
+        informacoes = cursor.execute(f"SELECT * FROM {nome_tabela} WHERE {coluna}='{valor}'").fetchall()
+
+
         banco.commit()
         banco.close()
+        return informacoes
         
 
     def atualizar_dados(self, nome_tabela:str, id:int, Coluna_com_Novo_valor: str):
@@ -175,12 +177,31 @@ class CRUD:
         cursor.execute(f"UPDATE {nome_tabela} SET {Coluna_com_Novo_valor} WHERE {coluna}='{valor}'")
         banco.commit()
         banco.close()
+        
+    def atualizar_dados_por_chave(self, nome_tabela:str, chave:str, Coluna_com_Novo_valor: str):
+        """        
+        Atualiza dados de uma linha da tabela ultilizando a seguinte formatação\n
+
+
+        Variaveis:
+            nome_tabela (str): "nome_da_tabela"
+            chave (str): chave
+            Coluna_com_Novo_valor (str): "coluna1= 'novo valor'"
+        """ 
+
+        banco =  sq.connect(self.endereço_banco)
+        cursor = banco.cursor()
+        
+        
+        cursor.execute(f"UPDATE {nome_tabela} SET {Coluna_com_Novo_valor} WHERE CHAVE ='{chave}'")
+        banco.commit()
+        banco.close()
 
     def apagar_dados_linha(self, nome_tabela:str, id: int):
         """
         Apaga dados de uma linha especifica
 
-        Variaveis:
+        Args:
             nome_tabela (str): "nome_da_tabela"
             id (int): numero da linha
         """
@@ -195,16 +216,47 @@ class CRUD:
         cursor.execute(f"DELETE FROM {nome_tabela} WHERE {coluna} = {valor}")
         banco.commit()        
         banco.close()
+        
+    def apagar_dados_linha_chave(self, nome_tabela:str, chave: str):
+        """
+        Apaga dados de uma linha especifica
+
+        Args:
+            nome_tabela (str): "nome_da_tabela"
+            id (int): numero da linha
+        """
+
+        banco =  sq.connect(self.endereço_banco)
+        cursor = banco.cursor()
+        
+        cursor.execute(f"DELETE FROM {nome_tabela} WHERE CHAVE = {chave}")
+        banco.commit()        
+        banco.close()
+        
     
     def reset (self, nome_da_tabela:str):
         """        
         Apagará todos os dados de uma tabela mas mantem as respectivas colunas ultilizando a seguinte formatação
-        Variaveis:
+        Args:
             nome_da_tabela (str): "nome_da_tabela"
         """
 
         banco =  sq.connect(self.endereço_banco)
         cursor = banco.cursor()
         cursor.execute(f"DELETE FROM {nome_da_tabela}")
+        banco.commit()  
+        banco.close() 
+    
+    def apagar_tabela (self, nome_da_tabela:str):
+        """
+        Apagará a tabela do banco de dados
+
+        Args:
+            nome_da_tabela (str): "nome_da_tabela"
+        """
+        
+        banco =  sq.connect(self.endereço_banco)
+        cursor = banco.cursor()
+        cursor.execute(f"DROP TABLE IF EXISTS {nome_da_tabela}")
         banco.commit()  
         banco.close() 
